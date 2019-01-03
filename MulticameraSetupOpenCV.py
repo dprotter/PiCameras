@@ -4,15 +4,15 @@ import time as time
 import csv
 from picamera import PiCamera
 from picamera.array import PiRGBArray
+import cv2
 
 
 def main(directory, video_fname = 'video_out', break_time = 10, num_cameras = 4):
-    directory_max = 10000
+    
+    #directory_max = 100
     set_dir(directory)
-    #check if theres already a set of images here, suggesting
-    #there was already an attempt at recording images.
-    ims = [ims for ims in os.listdir(directory) if ims.endswith(".jpg")]
-    num = len(ims)
+    
+    num = 0
 
     number_of_cameras = num_cameras
 
@@ -42,8 +42,8 @@ def main(directory, video_fname = 'video_out', break_time = 10, num_cameras = 4)
 
 
 
-        h, w = stream.shape()
-        cv_writers = [cv2.VideoWriter(fname+'_cam_%'i+".avi", fourcc, frame_rate) for i in range(number_of_cameras)]
+        h, w, = (640, 480)
+        cv_writers = [cv2.VideoWriter(filename = video_fname+'_cam_%i'%i+".avi", fourcc=fourcc, fps = freq, apiPreference = 0, frameSize = (640,480)) for i in range(number_of_cameras)]
 
         with open('log %s'%time.asctime().replace(':','_'),'w', newline='') as csvfile:
 
@@ -52,13 +52,13 @@ def main(directory, video_fname = 'video_out', break_time = 10, num_cameras = 4)
             log = [0,0,0,0]
             for i, frame in enumerate(camera.capture_continuous(rawCapture, format="bgr", use_video_port=True)):
 
-                if i >= directory_max:
-                    break
+                '''if i >= directory_max:
+                    break'''
                 if break_time < time.time():
                     print('times up')
                     break
 
-                cv_writers[i%number_of_cameras].write(frame.array)
+                cv_writers[i%number_of_cameras].write(cv2.flip(frame.array,-1))
 
                 log[0], log[1], log[3]=num, time.time()-loop, False
                 try:
@@ -73,7 +73,9 @@ def main(directory, video_fname = 'video_out', break_time = 10, num_cameras = 4)
                 loop = time.time()
                 num+=1
                 # clear the stream in preparation for the next frame
-	            rawCapture.truncate(0)
+                rawCapture.truncate(0)
+    for writer in cv_writers:
+        writer.release()
 
 
 def setup_pins(num_cameras = 6):
@@ -122,4 +124,4 @@ def set_dir(directory):
     os.chdir(directory)
 
 if __name__ == "__main__":
-    main()
+    main("/media/pi/SamsungT5/open_CV_test/0")

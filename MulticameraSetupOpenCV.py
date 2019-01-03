@@ -8,10 +8,10 @@ import cv2
 
 
 def main(directory, video_fname = 'video_out', break_time = 10, num_cameras = 4):
-    
+
     #directory_max = 100
     set_dir(directory)
-    
+
     num = 0
 
     number_of_cameras = num_cameras
@@ -61,13 +61,16 @@ def main(directory, video_fname = 'video_out', break_time = 10, num_cameras = 4)
                 cv_writers[i%number_of_cameras].write(cv2.flip(frame.array,-1))
 
                 log[0], log[1], log[3]=num, time.time()-loop, False
+
+                #set pins for the next image
+                cam_pins = set_pins(cam_pins = all_cams[(num+1)%number_of_cameras]) #setup the next cam_pins
+                print("num: %i, next cam: %i"%(num, (num+1)%number_of_cameras))
+
                 try:
                     time.sleep(interval-(time.time()-loop))
                 except:
                     log[3] = True
-                #set pins for the next image
-                cam_pins = set_pins(cam_pins = all_cams[(num+1)%number_of_cameras]) #setup the next cam_pins
-                print("num: %i, next cam: %i"%(num, (num+1)%number_of_cameras))
+
                 log[2] = time.time()-loop
                 log_writer.writerow(log)
                 loop = time.time()
@@ -124,4 +127,4 @@ def set_dir(directory):
     os.chdir(directory)
 
 if __name__ == "__main__":
-    main("/media/pi/SamsungT5/open_CV_test/0")
+    main("/media/pi/PiCameraVideos")
